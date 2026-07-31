@@ -22,12 +22,16 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads'));
 
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/bloodnet')
+app.get('/', (req, res) => {
+  res.json({ message: 'BloodNet+ API Server is running', status: 'OK' });
+});
+
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/bloodnet', { serverSelectionTimeoutMS: 3000 })
   .then(() => {
     console.log('Connected to MongoDB');
   })
   .catch((err) => {
-    console.error('MongoDB connection error:', err);
+    console.error('MongoDB connection error:', err.message);
     console.log('Starting server without MongoDB connection...');
   });
 
@@ -44,7 +48,7 @@ app.use('/api/requests', requestRoutes);
 app.use('/api/hospitals', hospitalRoutes);
 app.use('/api/notifications', notificationRoutes);
 // app.use('/api/certificates', certificateRoutes); // Temporarily disabled
-// app.use('/api/admin', require('./routes/admin')); // Temporarily disabled
+app.use('/api/admin', require('./routes/admin'));
 
 const connectedUsers = new Map();
 
@@ -71,6 +75,6 @@ global.io = io;
 global.connectedUsers = connectedUsers;
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
